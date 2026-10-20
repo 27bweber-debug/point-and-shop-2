@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light}
+body{margin:0;font:14px system-ui,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>Point &amp; Shop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Lexend:wght@500;600;700&display=swap">
+<style>
+:root{
+  /* Layout: a wayfinding board. Sticky category tabs sit over groups of sign plates; tapping a plate opens it full screen to show store staff. */
+  --bg:#EDF1F6;
+  --surface:#FFFFFF;
+  --ink:#0E1A2B;
+  --muted:#47586C;
+  --line:#C6D1DD;
+  --chip:#E1E8F0;
+  --star:#B87900;
+  --on-plate:#FFFFFF;
+  --accent:#1456C8;
+  --c-nav:#1456C8;
+  --c-ans:#2F3E55;
+  --c-food:#A8480A;
+  --c-wear:#7437A8;
+  --c-pay:#7A5A00;
+  --c-help:#A3195B;
+  --c-yes:#1E7B34;
+  --c-no:#C0262D;
+  --font-display:'Lexend',system-ui,'Segoe UI',Roboto,sans-serif;
+  --font-body:'Atkinson Hyperlegible',system-ui,'Segoe UI',Roboto,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0A1220;--surface:#152033;--ink:#EAF0F8;--muted:#A3B2C5;--line:#2B3B52;--chip:#1D2A40;--star:#F2B63C;
+    --accent:#2F6FE0;
+    --c-nav:#2F6FE0;--c-ans:#4A5F82;--c-food:#C25A12;--c-wear:#8E52C7;--c-pay:#9A7208;--c-help:#C2307A;--c-yes:#2A8F45;--c-no:#D1383F;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0A1220;--surface:#152033;--ink:#EAF0F8;--muted:#A3B2C5;--line:#2B3B52;--chip:#1D2A40;--star:#F2B63C;
+  --accent:#2F6FE0;
+  --c-nav:#2F6FE0;--c-ans:#4A5F82;--c-food:#C25A12;--c-wear:#8E52C7;--c-pay:#9A7208;--c-help:#C2307A;--c-yes:#2A8F45;--c-no:#D1383F;
+  color-scheme:dark;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:var(--font-body);font-size:1.0625rem;line-height:1.5;
+}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+
+/* category colour hooks: every plate reads --plate */
+.cat-nav{--plate:var(--c-nav)}
+.cat-ans{--plate:var(--c-ans)}
+.cat-food{--plate:var(--c-food)}
+.cat-wear{--plate:var(--c-wear)}
+.cat-pay{--plate:var(--c-pay)}
+.cat-help{--plate:var(--c-help)}
+.tone-yes{--plate:var(--c-yes)}
+.tone-no{--plate:var(--c-no)}
+
+.page{
+  max-width:1240px;margin:0 auto;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:32px 56px;
+}
+
+/* header */
+.top{display:grid;gap:12px;max-width:44rem}
+h1{
+  margin:0;font-family:var(--font-display);font-weight:700;
+  font-size:clamp(2.4rem,8vw,4.25rem);line-height:1.02;letter-spacing:-.025em;text-wrap:balance;
+}
+.lede{margin:0;font-size:1.2rem;max-width:40rem}
+.hint{margin:0;color:var(--muted);max-width:40rem}
+
+/* picture tabs: the symbol does the work, the word is for staff */
+.bar{background:var(--bg);padding-block:12px;margin-top:20px}
+@media (min-width:760px){
+  .bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+}
+.chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(76px,96px));gap:6px}
+.chip{
+  display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;padding:8px 4px 6px;
+  border:3px solid transparent;border-radius:16px;background:none;color:var(--ink);
+  font-family:var(--font-display);font-weight:600;font-size:.76rem;line-height:1.15;text-align:center;text-wrap:balance;
+}
+.chip[aria-pressed="true"]{border-color:var(--ink);background:var(--surface)}
+.cg{
+  display:grid;place-items:center;flex:none;width:56px;height:56px;border-radius:14px;
+  background:var(--plate,var(--c-ans));color:var(--on-plate);
+}
+.cg .glyph{width:70%;height:70%}
+.cg.sm{width:40px;height:40px;border-radius:11px}
+.sw{display:inline-block;width:14px;height:14px;border-radius:4px;background:var(--plate,var(--muted));flex:none}
+.n{font-variant-numeric:tabular-nums;font-weight:500;opacity:.72}
+
+/* tools */
+.tools{display:flex;flex-wrap:wrap;gap:8px 24px;align-items:center;margin-top:4px}
+.search{flex:1 1 260px;min-width:0}
+.search input{
+  width:100%;min-height:48px;padding:0 16px;border:2px solid var(--line);border-radius:10px;
+  background:var(--surface);color:var(--ink);
+}
+.search input::placeholder{color:var(--muted)}
+.switch{display:inline-flex;align-items:center;gap:10px;min-height:48px;cursor:pointer;font-weight:700;position:relative}
+.switch input{position:absolute;opacity:0;width:1px;height:1px}
+.track{width:52px;height:30px;border-radius:15px;background:var(--chip);border:2px solid var(--line);position:relative;flex:none}
+.track::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--ink);transition:transform .15s}
+.switch input:checked + .track{background:var(--accent);border-color:var(--accent)}
+.switch input:checked + .track::after{transform:translateX(22px);background:var(--on-plate)}
+.switch input:focus-visible + .track{outline:3px solid var(--ink);outline-offset:3px}
+
+.care{margin-top:20px;border:2px solid var(--line);border-radius:12px;background:var(--surface);padding-inline:16px;max-width:44rem}
+.care summary{min-height:52px;display:flex;align-items:center;font-family:var(--font-display);font-weight:600;cursor:pointer}
+.care[open] summary{border-bottom:2px solid var(--line)}
+.care .tools{padding-block:12px 4px}
+.count{margin:0 0 12px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* groups and tiles */
+#groups{display:grid;gap:40px;margin-top:16px}
+.group{display:grid;gap:16px}
+.group h2{
+  margin:0;display:flex;align-items:center;gap:10px;
+  font-family:var(--font-display);font-weight:700;font-size:1.35rem;letter-spacing:-.01em;
+}
+.grid{
+  --tile:150px;
+  list-style:none;margin:0;padding:0;display:grid;gap:22px 14px;
+  grid-template-columns:repeat(auto-fill,minmax(var(--tile),1fr));
+}
+.page.large .grid{--tile:230px}
+.tile{position:relative;min-width:0}
+.open{
+  display:flex;flex-direction:column;gap:10px;width:100%;padding:0;border:0;background:none;
+  text-align:left;border-radius:20px;
+}
+.open:focus-visible{outline-offset:5px}
+.plate{
+  position:relative;display:grid;place-items:center;aspect-ratio:1;max-width:100%;
+  border-radius:20px;background:var(--plate);color:var(--on-plate);
+}
+.plate::after{
+  content:"";position:absolute;inset:7px;border:2px solid var(--on-plate);opacity:.35;border-radius:14px;pointer-events:none;
+}
+.glyph{
+  width:58%;height:58%;fill:none;stroke:currentColor;stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round;
+}
+.open:hover .plate{filter:brightness(1.1)}
+.open:active .plate{transform:scale(.97)}
+.label{
+  font-family:var(--font-display);font-weight:600;font-size:1.02rem;line-height:1.25;
+  text-wrap:balance;padding-inline:2px;
+}
+.page.no-words .label,.page.no-words .cw{display:none}
+.fav{
+  position:absolute;top:8px;right:8px;z-index:1;width:44px;height:44px;display:grid;place-items:center;
+  border:0;border-radius:12px;background:var(--surface);color:var(--ink);
+}
+.fav svg,.btn svg.star{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
+.fav[aria-pressed="true"] svg,.btn[aria-pressed="true"] svg.star{fill:var(--star);stroke:var(--star)}
+
+.empty{margin:32px 0 0;max-width:34rem;font-size:1.1rem}
+
+.foot{margin-top:56px;padding-top:20px;border-top:2px solid var(--line);max-width:44rem;color:var(--muted);display:grid;gap:8px}
+.foot p{margin:0}
+
+/* full-screen viewer */
+.viewer{
+  position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;gap:12px;
+  background:var(--bg);color:var(--ink);
+  padding-top:calc(12px + env(safe-area-inset-top,0px));
+  padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+.vtop{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.vcat{margin:0;display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-weight:600;color:var(--muted)}
+.stage{
+  flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:18px;text-align:center;padding-block:8px;
+}
+.vplate{width:min(76vw,44vh,420px);flex:none;border-radius:28px}
+.vplate::after{inset:10px;border-radius:20px}
+.stage h2{
+  margin:0;font-family:var(--font-display);font-weight:700;
+  font-size:clamp(2.25rem,9vw,4.5rem);line-height:1.05;letter-spacing:-.02em;text-wrap:balance;
+}
+.stage p{margin:0;font-size:clamp(1.15rem,3.2vw,1.6rem);max-width:30rem;text-wrap:balance}
+.vnav{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:640px;width:100%;margin:0 auto}
+.btn{
+  min-height:56px;padding:0 16px;display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  border:2px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);
+  font-family:var(--font-display);font-weight:600;font-size:1.05rem;
+}
+.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.vtop .btn svg{width:30px;height:30px}
+.vnav .btn{min-height:80px;flex-direction:column;gap:4px;font-size:.9rem}
+.vnav .btn svg,.vnav .btn svg.star{width:32px;height:32px}
+
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+@media (prefers-reduced-motion:reduce){
+  .track::after{transition:none}
+  .open:active .plate{transform:none}
+}
+</style>
+</head>
+<body>
+<div class="page" id="page">
+  <header class="top">
+    <h1>Point &amp; Shop</h1>
+    <p class="lede">Picture symbols for finding things, answering questions and asking for help in grocery and clothing stores. Tap any symbol to show it full screen.</p>
+    <p class="hint">The symbols are for the shopper. The words under them are for store staff and caregivers.</p>
+  </header>
+
+  <details class="care">
+    <summary>Caregiver options</summary>
+    <div class="tools">
+      <div class="search">
+        <label class="sr" for="q">Find a symbol</label>
+        <input id="q" type="search" placeholder="Find a symbol, like “milk” or “pay”" autocomplete="off">
+      </div>
+      <label class="switch" for="words"><input type="checkbox" id="words" checked><span class="track"></span><span>Words under symbols</span></label>
+      <label class="switch" for="large"><input type="checkbox" id="large"><span class="track"></span><span>Large symbols</span></label>
+    </div>
+    <p class="count" id="count" aria-live="polite"></p>
+  </details>
+
+  <div class="bar">
+    <div class="chips" id="chips" role="group" aria-label="Filter by group"></div>
+  </div>
+
+  <main id="groups"></main>
+  <p class="empty" id="empty" hidden></p>
+
+  <footer class="foot">
+    <p>These pictograms were drawn for this page. They are not an official communication system like the ones speech therapists use.</p>
+    <p>If someone already uses a set of symbols, start with those and keep this page as a backup for stores. Saved symbols stay on this device.</p>
+  </footer>
+</div>
+
+<div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-labelledby="v-title" hidden>
+  <div class="vtop">
+    <p class="vcat"><span class="cg sm" id="v-cg"></span><span id="v-cat"></span></p>
+    <button type="button" class="btn primary" id="v-close">Close <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>
+  <div class="stage">
+    <div class="plate vplate" id="v-plate"></div>
+    <h2 id="v-title"></h2>
+    <p id="v-say"></p>
+  </div>
+  <div class="vnav">
+    <button type="button" class="btn" id="v-prev"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Back</button>
+    <button type="button" class="btn" id="v-fav" aria-pressed="false"><svg class="star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.6 5.5 6 .8-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6L3.4 9.5l6-.8z"/></svg><span id="v-fav-t">Save</span></button>
+    <button type="button" class="btn" id="v-next">Next<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var $ = function(s){ return document.querySelector(s); };
+  var esc = function(t){ return String(t).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+
+  var CATS = [
+    {id:'nav',  name:'Get around', icon:'entrance'},
+    {id:'ans',  name:'Answers',    icon:'dunno'},
+    {id:'food', name:'Grocery',    icon:'fruit'},
+    {id:'wear', name:'Clothing',   icon:'shirt'},
+    {id:'pay',  name:'Pay & leave', icon:'card'},
+    {id:'help', name:'Help',       icon:'help'}
+  ];
+  var ALLG = '<rect x="10" y="10" width="19" height="19" rx="4"/><rect x="35" y="10" width="19" height="19" rx="4"/><rect x="10" y="35" width="19" height="19" rx="4"/><rect x="35" y="35" width="19" height="19" rx="4"/>';
+  var STARG = '<path d="M32 9L38.5 25.1 55.8 26.3 42.5 37.4 46.7 54.2 32 45 17.3 54.2 21.5 37.4 8.2 26.3 25.5 25.1z"/>';
+
+  /* 50 symbols. g = SVG shapes on a 64x64 grid, drawn in the plate's white. say = what it means when shown to staff. */
+  var S = [
+    {id:'entrance', cat:'nav', name:'Entrance', say:'Where is the entrance?',
+     g:'<path d="M36 10h12a4 4 0 0 1 4 4v36a4 4 0 0 1-4 4H36"/><path d="M8 32h28M26 21l11 11-11 11"/>'},
+    {id:'exit', cat:'nav', name:'Exit', say:'Where is the exit?',
+     g:'<path d="M28 10H16a4 4 0 0 0-4 4v36a4 4 0 0 0 4 4h12"/><path d="M26 32h30M46 21l11 11-11 11"/>'},
+    {id:'restroom', cat:'nav', name:'Restroom', say:'Where is the restroom?',
+     g:'<circle cx="18" cy="13" r="5" fill="currentColor" stroke="none"/><path d="M18 26v14" stroke-width="9"/><path d="M14.5 44v10M21.5 44v10M9.5 28v11M26.5 28v11" stroke-width="4"/><path d="M32 8v48" stroke-width="2.5"/><circle cx="46" cy="13" r="5" fill="currentColor" stroke="none"/><path d="M46 24 37 44h18z" fill="currentColor"/><path d="M42 47v7M50 47v7" stroke-width="4"/>'},
+    {id:'elevator', cat:'nav', name:'Elevator', say:'Where is the elevator?',
+     g:'<rect x="12" y="8" width="40" height="48" rx="5"/><path d="M32 17l-9 11h18z" fill="currentColor"/><path d="M32 47l-9-11h18z" fill="currentColor"/>'},
+    {id:'stairs', cat:'nav', name:'Stairs', say:'Where are the stairs?',
+     g:'<path d="M8 54h14V42h14V30h14V18h6" stroke-width="4"/>'},
+    {id:'straight', cat:'nav', name:'Straight ahead', say:'Go straight ahead.',
+     g:'<path d="M32 56V10M16 26 32 10l16 16" stroke-width="4"/>'},
+    {id:'left', cat:'nav', name:'Turn left', say:'Turn left.',
+     g:'<path d="M46 56V36a10 10 0 0 0-10-10H14M24 16 14 26l10 10" stroke-width="4"/>'},
+    {id:'right', cat:'nav', name:'Turn right', say:'Turn right.',
+     g:'<path d="M18 56V36a10 10 0 0 1 10-10h22M40 16l10 10-10 10" stroke-width="4"/>'},
+    {id:'parking', cat:'nav', name:'Parking', say:'Where is the parking lot?',
+     g:'<rect x="10" y="10" width="44" height="44" rx="7"/><path d="M26 46V18h9a8 8 0 0 1 0 16h-9" stroke-width="4"/>'},
+    {id:'map', cat:'nav', name:'Store map', say:'Do you have a map of the store?',
+     g:'<path d="M8 14l16-6 16 6 16-6v42l-16 6-16-6-16 6z"/><path d="M24 8v42M40 14v42"/>'},
+
+    {id:'yes', cat:'ans', tone:'yes', name:'Yes', say:'Yes.',
+     g:'<circle cx="32" cy="32" r="24"/><path d="M20 33l8 8 17-18" stroke-width="5"/>'},
+    {id:'no', cat:'ans', tone:'no', name:'No', say:'No.',
+     g:'<circle cx="32" cy="32" r="24"/><path d="M23 23l18 18M41 23 23 41" stroke-width="5"/>'},
+    {id:'wait', cat:'ans', name:'Wait', say:'Please wait a moment.',
+     g:'<path d="M20 8h24v8L32 32l12 16v8H20v-8l12-16-12-16z"/><path d="M24 52h16l-8-10z" fill="currentColor" stroke="none"/>'},
+    {id:'please', cat:'ans', name:'Please', say:'Please.',
+     g:'<path d="M32 8c-7 7-11 15-11 25l11 13 11-13c0-10-4-18-11-25z"/><path d="M32 12v32"/><path d="M24 46l-7 9M40 46l7 9"/>'},
+    {id:'thanks', cat:'ans', name:'Thank you', say:'Thank you.',
+     g:'<path d="M32 54S10 40 10 25a11 11 0 0 1 22-3 11 11 0 0 1 22 3c0 15-22 29-22 29z"/>'},
+    {id:'dunno', cat:'ans', name:'I don’t understand', say:'I don’t understand. Please show me or point.',
+     g:'<path d="M10 14a4 4 0 0 1 4-4h36a4 4 0 0 1 4 4v24a4 4 0 0 1-4 4H30l-12 12V42h-4a4 4 0 0 1-4-4z"/><path d="M25 21a7 7 0 1 1 10.5 6c-2.5 1.5-3.5 3-3.5 5.5"/><circle cx="32" cy="37" r="1.8" fill="currentColor" stroke="none"/>'},
+    {id:'where', cat:'ans', name:'Where is it?', say:'I am looking for something. Please show me where it is.',
+     g:'<path d="M32 58S12 40 12 26a20 20 0 0 1 40 0c0 14-20 32-20 32z"/><path d="M26.5 22.5a5.5 5.5 0 1 1 8 4.8c-1.8 1-2.5 2-2.5 3.7"/><circle cx="32" cy="37" r="1.8" fill="currentColor" stroke="none"/>'},
+
+    {id:'fruit', cat:'food', name:'Fruit', say:'I am looking for fruit.',
+     g:'<path d="M32 20c-5-4-18-3-18 13 0 11 8 23 15 23 2 0 2-1 3-1s1 1 3 1c7 0 15-12 15-23 0-16-13-17-18-13z"/><path d="M32 20c0-6 2-9 5-11"/><path d="M36 13c4-3 8-2 9 0-2 3-6 4-9 0z"/>'},
+    {id:'veg', cat:'food', name:'Vegetables', say:'I am looking for vegetables.',
+     g:'<path d="M36 16a8.5 8.5 0 0 1 12 12L10 54z"/><path d="M45 19l3-10M48 22l9-4"/>'},
+    {id:'bread', cat:'food', name:'Bread', say:'I am looking for bread.',
+     g:'<path d="M10 28c0-10 10-16 22-16s22 6 22 16c0 3-2 5-4 5v19H14V33c-2 0-4-2-4-5z"/><path d="M24 20l5 7M35 20l5 7"/>'},
+    {id:'milk', cat:'food', name:'Milk', say:'I am looking for milk.',
+     g:'<path d="M20 24h24v32H20z"/><path d="M20 24l6-12h12l6 12"/><path d="M32 38c3 4 4 5 4 7a4 4 0 0 1-8 0c0-2 1-3 4-7z"/>'},
+    {id:'eggs', cat:'food', name:'Eggs', say:'I am looking for eggs.',
+     g:'<path d="M32 8c-10 0-18 20-18 32a18 18 0 0 0 36 0C50 28 42 8 32 8z"/><path d="M22 38c0 6 3 10 8 12"/>'},
+    {id:'meat', cat:'food', name:'Meat', say:'I am looking for meat.',
+     g:'<circle cx="40" cy="24" r="16"/><path d="M29 35 14 50"/><circle cx="11" cy="48" r="4.5"/><circle cx="16" cy="53" r="4.5"/><path d="M33 20a8 8 0 0 1 8-6"/>'},
+    {id:'fish', cat:'food', name:'Fish', say:'I am looking for fish.',
+     g:'<path d="M8 32c8-12 20-16 30-12l12-8v40l-12-8c-10 4-22 0-30-12z"/><circle cx="20" cy="30" r="2.2" fill="currentColor" stroke="none"/>'},
+    {id:'frozen', cat:'food', name:'Frozen food', say:'I am looking for frozen food.',
+     g:'<path d="M32 8v48M10 20l44 24M10 44l44-24"/><path d="M26 12l6 6 6-6M26 52l6-6 6 6"/>'},
+    {id:'drinks', cat:'food', name:'Drinks', say:'I am looking for drinks.',
+     g:'<path d="M27 8h10v8l5 8v30a3 3 0 0 1-3 3H25a3 3 0 0 1-3-3V24l5-8z"/><path d="M22 38h20"/>'},
+    {id:'snacks', cat:'food', name:'Snacks', say:'I am looking for snacks.',
+     g:'<circle cx="32" cy="32" r="22"/><circle cx="24" cy="24" r="3" fill="currentColor" stroke="none"/><circle cx="40" cy="26" r="3" fill="currentColor" stroke="none"/><circle cx="30" cy="38" r="3" fill="currentColor" stroke="none"/><circle cx="43" cy="41" r="2.5" fill="currentColor" stroke="none"/><circle cx="21" cy="40" r="2.5" fill="currentColor" stroke="none"/>'},
+    {id:'cart', cat:'food', name:'Shopping cart', say:'I need a shopping cart.',
+     g:'<path d="M6 10h8l7 30h27l6-22H17"/><circle cx="24" cy="50" r="4"/><circle cx="44" cy="50" r="4"/>'},
+    {id:'pharmacy', cat:'food', name:'Pharmacy', say:'Where is the pharmacy?',
+     g:'<path d="M24 10h16v14h14v16H40v14H24V40H10V24h14z"/>'},
+
+    {id:'shirt', cat:'wear', name:'Shirt', say:'I am looking for shirts.',
+     g:'<path d="M22 8l-14 8 5 12 7-3v31h24V25l7 3 5-12-14-8c-2 4-6 6-10 6s-8-2-10-6z"/>'},
+    {id:'pants', cat:'wear', name:'Pants', say:'I am looking for pants.',
+     g:'<path d="M18 8h28l4 48H35L32 24l-3 32H14z"/><path d="M18 16h28"/>'},
+    {id:'dress', cat:'wear', name:'Dress', say:'I am looking for dresses.',
+     g:'<path d="M24 8h6l2 8 2-8h6l-3 18 12 30H15l12-30z"/><path d="M27 26h10"/>'},
+    {id:'coat', cat:'wear', name:'Coat', say:'I am looking for coats.',
+     g:'<path d="M24 8 8 16 6 50h10v8h32v-8h10L56 16 40 8l-8 14z"/><path d="M16 50V28M48 50V28M32 22v36"/>'},
+    {id:'shoes', cat:'wear', name:'Shoes', say:'I am looking for shoes.',
+     g:'<path d="M8 18v28h50v-5c0-4-3-6-8-7l-10-3c-5-2-7-5-9-9z"/><path d="M8 52h50"/><path d="M34 28l-4 4M40 31l-3 4"/>'},
+    {id:'socks', cat:'wear', name:'Socks', say:'I am looking for socks.',
+     g:'<path d="M22 8h18v24l10 8c4 4 4 10 0 14-4 4-10 4-14 0L22 40z"/><path d="M22 16h18"/>'},
+    {id:'hat', cat:'wear', name:'Hat', say:'I am looking for hats.',
+     g:'<path d="M12 40a20 20 0 0 1 40 0z"/><rect x="10" y="40" width="44" height="10" rx="3"/><circle cx="32" cy="14" r="5"/>'},
+    {id:'fitting', cat:'wear', name:'Fitting room', say:'I want to try these on. Where is the fitting room?',
+     g:'<rect x="10" y="8" width="44" height="48" rx="5"/><path d="M32 20a3.5 3.5 0 1 1 3.5 3.5L32 27"/><path d="M32 27 16 42h32z"/>'},
+    {id:'size', cat:'wear', name:'Size', say:'I need a different size.',
+     g:'<rect x="8" y="22" width="48" height="20" rx="3"/><path d="M18 22v8M26 22v6M34 22v8M42 22v6M50 22v8"/>'},
+    {id:'returns', cat:'wear', name:'Return item', say:'I want to return or exchange this.',
+     g:'<path d="M14 22h28a12 12 0 0 1 0 24H22"/><path d="M24 12 14 22l10 10"/>'},
+
+    {id:'checkout', cat:'pay', name:'Checkout', say:'I am ready to pay. Where is the checkout?',
+     g:'<rect x="10" y="32" width="44" height="22" rx="3"/><path d="M18 32V16h28v16M24 24h16M19 43h6M29 43h6M39 43h6"/>'},
+    {id:'cash', cat:'pay', name:'Cash', say:'I will pay with cash.',
+     g:'<rect x="6" y="16" width="52" height="32" rx="4"/><circle cx="32" cy="32" r="8"/><circle cx="15" cy="32" r="2" fill="currentColor" stroke="none"/><circle cx="49" cy="32" r="2" fill="currentColor" stroke="none"/>'},
+    {id:'card', cat:'pay', name:'Card', say:'I will pay with a card.',
+     g:'<rect x="6" y="14" width="52" height="36" rx="5"/><path d="M6 27h52" stroke-width="7" stroke-linecap="butt"/><path d="M14 41h12"/>'},
+    {id:'receipt', cat:'pay', name:'Receipt', say:'I need a receipt.',
+     g:'<path d="M16 8h32v48l-5-4-5 4-6-4-6 4-5-4-5 4z"/><path d="M23 20h18M23 29h18M23 38h10"/>'},
+    {id:'bag', cat:'pay', name:'Bag', say:'I need a bag.',
+     g:'<path d="M12 24h40l3 32H9z"/><path d="M23 32V20a9 9 0 0 1 18 0v12"/>'},
+    {id:'price', cat:'pay', name:'How much?', say:'How much does this cost?',
+     g:'<path d="M8 8h22l26 26-22 22L8 30z"/><path d="M29.5 30a4.5 4.5 0 1 1 6.5 4c-1.5 1-2 2-2 3.5"/><circle cx="34" cy="43" r="1.7" fill="currentColor" stroke="none"/>'},
+
+    {id:'help', cat:'help', name:'I need help', say:'I need help, please.',
+     g:'<circle cx="26" cy="15" r="6" fill="currentColor" stroke="none"/><path d="M26 26v18M26 44l-8 12M26 44l8 12M26 31l-11 8M26 31l14-14" stroke-width="4.5"/><path d="M46 9l3-4M51 15h6M47 22l5 3"/>'},
+    {id:'staff', cat:'help', name:'Staff member', say:'Where can I find someone who works here?',
+     g:'<circle cx="32" cy="17" r="8"/><path d="M12 56c0-13 9-21 20-21s20 8 20 21z"/><rect x="37" y="43" width="10" height="7" rx="1.5" fill="currentColor" stroke="none"/>'},
+    {id:'lost', cat:'help', name:'I’m lost', say:'I am lost. Please help me find my way.',
+     g:'<circle cx="20" cy="17" r="6" fill="currentColor" stroke="none"/><path d="M20 28v16M20 44l-7 12M20 44l7 12M20 33l-9 7M20 33l9 7" stroke-width="4.5"/><path d="M39 22a6.5 6.5 0 1 1 9.5 5.5c-2 1.2-3 2.3-3 5"/><circle cx="45.5" cy="41" r="2" fill="currentColor" stroke="none"/>'},
+    {id:'loud', cat:'help', name:'Too loud', say:'It is too loud for me. I need a quiet place.',
+     g:'<path d="M8 24h10l14-12v40L18 40H8z"/><path d="M42 24a12 12 0 0 1 0 16M48 17a22 22 0 0 1 0 30"/><path d="M10 8 56 56" stroke-width="4"/>'},
+    {id:'unwell', cat:'help', name:'I feel unwell', say:'I feel sick. I need help or a place to sit.',
+     g:'<circle cx="32" cy="32" r="24"/><circle cx="23" cy="27" r="2.6" fill="currentColor" stroke="none"/><circle cx="41" cy="27" r="2.6" fill="currentColor" stroke="none"/><path d="M20 42c4-5 8-5 12 0s8 5 12 0"/>'}
+  ];
+
+  var byId = {}; S.forEach(function(s){ byId[s.id] = s; });
+  var catName = function(id){ return CATS.filter(function(c){ return c.id === id; })[0].name; };
+  var svg = function(g){ return '<svg class="glyph" viewBox="0 0 64 64" aria-hidden="true" focusable="false">' + g + '</svg>'; };
+  var STAR = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3.2l2.6 5.5 6 .8-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6L3.4 9.5l6-.8z"/></svg>';
+
+  var page = $('#page'), chipsEl = $('#chips'), groups = $('#groups'), emptyEl = $('#empty'), countEl = $('#count');
+  var qEl = $('#q'), wordsEl = $('#words'), largeEl = $('#large');
+  var viewer = $('#viewer');
+
+  var state = { filter:'all', q:'', words:true, large:false };
+  var favs = new Set();
+  try {
+    var raw = localStorage.getItem('pointshop.favs');
+    if (raw) JSON.parse(raw).forEach(function(id){ if (byId[id]) favs.add(id); });
+    var pr = JSON.parse(localStorage.getItem('pointshop.prefs') || '{}');
+    if (typeof pr.words === 'boolean') state.words = pr.words;
+    if (typeof pr.large === 'boolean') state.large = pr.large;
+  } catch (e) {}
+  function saveFavs(){ try { localStorage.setItem('pointshop.favs', JSON.stringify(Array.from(favs))); } catch (e) {} }
+  function savePrefs(){ try { localStorage.setItem('pointshop.prefs', JSON.stringify({words:state.words, large:state.large})); } catch (e) {} }
+
+  function visible(){
+    var q = state.q.trim().toLowerCase();
+    return S.filter(function(s){
+      if (state.filter === 'mine' && !favs.has(s.id)) return false;
+      if (state.filter !== 'all' && state.filter !== 'mine' && s.cat !== state.filter) return false;
+      if (q && (s.name + ' ' + s.say + ' ' + catName(s.cat)).toLowerCase().indexOf(q) === -1) return false;
+      return true;
+    });
+  }
+
+  function buildChips(){
+    var items = [{id:'all', name:'All', g:ALLG, cls:''}]
+      .concat(CATS.map(function(c){ return {id:c.id, name:c.name, g:byId[c.icon].g, cls:'cat-' + c.id}; }))
+      .concat([{id:'mine', name:'My board', g:STARG, cls:''}]);
+    chipsEl.innerHTML = items.map(function(i){
+      return '<button type="button" class="chip ' + i.cls + '" data-f="' + i.id + '" aria-pressed="false" aria-label="' + esc(i.name) + '">' +
+        '<span class="cg">' + svg(i.g) + '</span><span class="cw">' + esc(i.name) + '</span></button>';
+    }).join('');
+  }
+  function updateChips(){
+    Array.prototype.forEach.call(chipsEl.querySelectorAll('.chip'), function(b){
+      b.setAttribute('aria-pressed', String(state.filter === b.getAttribute('data-f')));
+    });
+  }
+
+  function tileHTML(s){
+    var on = favs.has(s.id);
+    return '<li class="tile' + (s.tone ? ' tone-' + s.tone : '') + '" data-id="' + s.id + '">' +
+      '<button type="button" class="open" data-act="open" aria-label="' + esc(s.name) + ', show full screen">' +
+        '<span class="plate">' + svg(s.g) + '</span><span class="label">' + esc(s.name) + '</span></button>' +
+      '<button type="button" class="fav" data-act="fav" aria-pressed="' + on + '" aria-label="Save ' + esc(s.name) + ' to My board">' + STAR + '</button></li>';
+  }
+
+  function render(){
+    var list = visible();
+    groups.innerHTML = CATS.map(function(c){
+      var items = list.filter(function(s){ return s.cat === c.id; });
+      if (!items.length) return '';
+      return '<section class="group cat-' + c.id + '" aria-labelledby="h-' + c.id + '">' +
+        '<h2 id="h-' + c.id + '"><span class="cg sm">' + svg(byId[c.icon].g) + '</span>' + esc(c.name) + '</h2>' +
+        '<ul class="grid">' + items.map(tileHTML).join('') + '</ul></section>';
+    }).join('');
+    var q = state.q.trim();
+    if (!list.length) {
+      emptyEl.hidden = false;
+      emptyEl.textContent = (state.filter === 'mine' && !q)
+        ? 'Nothing saved yet. Tap the star on a symbol to keep it here. Saved symbols stay on this device.'
+        : 'No symbols match “' + q + '”. Try a shorter word, or choose All.';
+    } else { emptyEl.hidden = true; }
+    countEl.textContent = list.length + (list.length === 1 ? ' symbol' : ' symbols');
+    page.classList.toggle('no-words', !state.words);
+    page.classList.toggle('large', state.large);
+    updateChips();
+  }
+
+  function toggleFav(id){
+    if (favs.has(id)) favs.delete(id); else favs.add(id);
+    saveFavs();
+    var wasMine = state.filter === 'mine';
+    if (wasMine) {
+      render();
+      var f = groups.querySelector('.fav') || chipsEl.querySelector('[data-f="mine"]');
+      if (f && viewer.hidden) f.focus();
+    } else {
+      var b = groups.querySelector('[data-id="' + id + '"] .fav');
+      if (b) b.setAttribute('aria-pressed', String(favs.has(id)));
+      updateChips();
+    }
+  }
+
+  /* full-screen viewer */
+  var viewList = [], idx = 0, lastFocus = null;
+  function showCurrent(){
+    var s = viewList[idx];
+    viewer.className = 'viewer cat-' + s.cat + (s.tone ? ' tone-' + s.tone : '');
+    $('#v-plate').innerHTML = svg(s.g);
+    $('#v-title').textContent = s.name;
+    $('#v-say').textContent = s.say;
+    $('#v-cat').textContent = catName(s.cat);
+    $('#v-cg').innerHTML = svg(byId[CATS.filter(function(c){ return c.id === s.cat; })[0].icon].g);
+    var on = favs.has(s.id);
+    $('#v-fav').setAttribute('aria-pressed', String(on));
+    $('#v-fav-t').textContent = on ? 'Saved' : 'Save';
+  }
+  function openViewer(id){
+    viewList = visible();
+    idx = viewList.map(function(s){ return s.id; }).indexOf(id);
+    if (idx < 0) { viewList = S.slice(); idx = viewList.map(function(s){ return s.id; }).indexOf(id); }
+    lastFocus = document.activeElement;
+    showCurrent();
+    viewer.hidden = false;
+    page.inert = true;
+    document.documentElement.style.overflow = 'hidden';
+    $('#v-close').focus();
+  }
+  function closeViewer(){
+    var id = viewList[idx] && viewList[idx].id;
+    viewer.hidden = true;
+    page.inert = false;
+    document.documentElement.style.overflow = '';
+    var el = id && groups.querySelector('[data-id="' + id + '"] .open');
+    (el || chipsEl.querySelector('.chip[aria-pressed="true"]') || lastFocus || document.body).focus();
+  }
+  function step(d){ idx = (idx + d + viewList.length) % viewList.length; showCurrent(); }
+
+  /* events */
+  chipsEl.addEventListener('click', function(e){
+    var b = e.target.closest('.chip'); if (!b) return;
+    state.filter = b.getAttribute('data-f'); render();
+  });
+  groups.addEventListener('click', function(e){
+    var b = e.target.closest('[data-act]'); if (!b) return;
+    var id = b.closest('.tile').getAttribute('data-id');
+    if (b.getAttribute('data-act') === 'open') openViewer(id); else toggleFav(id);
+  });
+  qEl.addEventListener('input', function(){ state.q = qEl.value; render(); });
+  wordsEl.addEventListener('change', function(){ state.words = wordsEl.checked; savePrefs(); render(); });
+  largeEl.addEventListener('change', function(){ state.large = largeEl.checked; savePrefs(); render(); });
+  $('#v-close').addEventListener('click', closeViewer);
+  $('#v-prev').addEventListener('click', function(){ step(-1); });
+  $('#v-next').addEventListener('click', function(){ step(1); });
+  $('#v-fav').addEventListener('click', function(){
+    var id = viewList[idx].id;
+    if (favs.has(id)) favs.delete(id); else favs.add(id);
+    saveFavs(); showCurrent(); render();
+  });
+  document.addEventListener('keydown', function(e){
+    if (viewer.hidden) return;
+    if (e.key === 'Escape') closeViewer();
+    else if (e.key === 'ArrowLeft') step(-1);
+    else if (e.key === 'ArrowRight') step(1);
+  });
+
+  wordsEl.checked = state.words;
+  largeEl.checked = state.large;
+  buildChips();
+  render();
+})();
+</script>
+</body>
+</html>
